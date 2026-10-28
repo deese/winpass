@@ -19,7 +19,11 @@ jobs:
           go-version-file: src/go.mod
 
       - name: Build
-        run: go build -ldflags="-s -w" -o dist/winpass.exe ./src
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          cd src
+          go build -ldflags="-s -w" -o ../dist/winpass.exe .
+
 
       - name: Create release
         env:
