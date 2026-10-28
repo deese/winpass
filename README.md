@@ -81,6 +81,7 @@ Each entry is encrypted with DPAPI, scoped to the current Windows user account.
 | Multiline entries | Unlimited size | 2560 bytes max |
 | Platform | Unix | Windows |
 | Dependencies | gpg, git, bash | None |
+| Extensions | yes | Not planned (I don't have a use-case yet) | 
 
 ## Building from source
 
