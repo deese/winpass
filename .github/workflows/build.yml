@@ -22,7 +22,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force dist | Out-Null
           cd src
-          go build -ldflags="-s -w" -o ../dist/winpass.exe .
+          go build -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o ../dist/winpass.exe .
 
       - name: Package
         run: Compress-Archive -Path dist/winpass.exe -DestinationPath dist/winpass-${{ github.ref_name }}-windows-amd64.zip

@@ -5,6 +5,9 @@ import (
 	"os"
 )
 
+// version is overridden at build time via -ldflags "-X main.version=<tag>"
+var version = "dev"
+
 const usage = `Usage: winpass <command> [args]
 
 Commands:
@@ -17,6 +20,7 @@ Commands:
   ls [filter]          List entries
   find <term>          Search entries
   help                 Show this help
+  version              Show version
 
 Flags:
   -c   Copy password to clipboard instead of printing
@@ -51,6 +55,8 @@ func main() {
 		err = cmdFind(args)
 	case "help", "--help", "-h":
 		fmt.Print(usage)
+	case "version", "--version", "-v":
+		fmt.Println("winpass", version)
 	default:
 		// bare name acts as show, like pass does
 		err = cmdShow(os.Args[1:])
