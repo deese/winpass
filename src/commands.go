@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"sort"
 	"strconv"
@@ -244,9 +245,7 @@ var (
 func readPassword() (string, error) {
 	handle, err := syscall.Open("CONIN$", syscall.O_RDWR, 0)
 	if err != nil {
-		var pw string
-		fmt.Scanln(&pw)
-		return pw, nil
+		return readLine()
 	}
 	defer syscall.Close(handle)
 
@@ -256,9 +255,30 @@ func readPassword() (string, error) {
 	procSetConsoleMode.Call(uintptr(handle), uintptr(oldMode&^uint32(0x0004)))
 	defer procSetConsoleMode.Call(uintptr(handle), uintptr(oldMode))
 
-	var pw string
-	fmt.Scanln(&pw)
-	return pw, nil
+	return readLine()
+}
+
+// readLine reads a full line from stdin, keeping spaces. It reads byte by byte
+// without buffering so consecutive prompts do not lose piped input.
+func readLine() (string, error) {
+	var line []byte
+	b := make([]byte, 1)
+	for {
+		n, err := os.Stdin.Read(b)
+		if n == 1 {
+			if b[0] == '\n' {
+				break
+			}
+			line = append(line, b[0])
+		}
+		if err != nil {
+			if len(line) == 0 && err != io.EOF {
+				return "", err
+			}
+			break
+		}
+	}
+	return strings.TrimSuffix(string(line), "\r"), nil
 }
 
 // printTree renders a tree view for a sorted list of slash-separated paths

@@ -19,6 +19,8 @@ Commands:
   cp <old> <new>       Copy entry
   ls [filter]          List entries
   find <term>          Search entries
+  export <file>        Export all entries to an encrypted file
+  import [-f] <file>   Import entries from an encrypted file (-f overwrites)
   help                 Show this help
   version              Show version
 
@@ -53,6 +55,10 @@ func main() {
 		err = cmdLs(args)
 	case "find", "search":
 		err = cmdFind(args)
+	case "export":
+		err = cmdExport(args)
+	case "import":
+		err = cmdImport(args)
 	case "help", "--help", "-h":
 		fmt.Print(usage)
 	case "version", "--version", "-v":

@@ -28,6 +28,9 @@ winpass <command> [args]
 | `cp <old> <new>` | Copy entry |
 | `ls [filter]` | List all entries as a tree |
 | `find <term>` | Search entries by name |
+| `export <file>` | Export all entries to a passphrase-encrypted file (AES-256-GCM, PBKDF2-SHA256) |
+| `import [-f] <file>` | Import entries from an export file. Existing entries are skipped unless `-f` is given |
+| `version` | Print version |
 
 A bare name with no subcommand acts as `show`:
 
