@@ -265,13 +265,28 @@ func cmdRm(args []string) error {
 }
 
 func cmdMv(args []string) error {
-	if len(args) < 2 {
-		return fmt.Errorf("usage: winpass mv <old> <new>")
+	opts, err := parseOptions(args, []flagSpec{{short: 'f', long: "force"}})
+	if err != nil {
+		return err
 	}
-	old, newName := args[0], args[1]
+	if len(opts.positional) != 2 {
+		return fmt.Errorf("usage: winpass mv [--force, -f] <old> <new>")
+	}
+	old, newName := opts.positional[0], opts.positional[1]
+	if old == newName {
+		return fmt.Errorf("source and destination are the same: %s", old)
+	}
 	password, err := credRead(old)
 	if err != nil {
 		return err
+	}
+	ok, err := confirmOverwrite(newName, opts.flags["force"])
+	if err != nil {
+		return err
+	}
+	if !ok {
+		fmt.Println("Aborted.")
+		return nil
 	}
 	if err := credWrite(newName, password); err != nil {
 		return err
@@ -284,13 +299,25 @@ func cmdMv(args []string) error {
 }
 
 func cmdCp(args []string) error {
-	if len(args) < 2 {
-		return fmt.Errorf("usage: winpass cp <old> <new>")
+	opts, err := parseOptions(args, []flagSpec{{short: 'f', long: "force"}})
+	if err != nil {
+		return err
 	}
-	old, newName := args[0], args[1]
+	if len(opts.positional) != 2 {
+		return fmt.Errorf("usage: winpass cp [--force, -f] <old> <new>")
+	}
+	old, newName := opts.positional[0], opts.positional[1]
 	password, err := credRead(old)
 	if err != nil {
 		return err
+	}
+	ok, err := confirmOverwrite(newName, opts.flags["force"])
+	if err != nil {
+		return err
+	}
+	if !ok {
+		fmt.Println("Aborted.")
+		return nil
 	}
 	if err := credWrite(newName, password); err != nil {
 		return err
