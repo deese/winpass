@@ -21,6 +21,7 @@ Commands:
   find <term>          Search entries
   export <file>        Export all entries to an encrypted file
   import [-f] <file>   Import entries from an encrypted file (-f overwrites)
+  completion powershell  Print the PowerShell tab-completion script
   help                 Show this help
   version              Show version
 
@@ -59,6 +60,10 @@ func main() {
 		err = cmdExport(args)
 	case "import":
 		err = cmdImport(args)
+	case completeCmd:
+		err = cmdComplete(args)
+	case "completion":
+		err = cmdCompletion(args)
 	case clearClipboardCmd:
 		err = cmdClearClipboard(args)
 	case "help", "--help", "-h":
