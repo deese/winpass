@@ -12,26 +12,30 @@ import (
 )
 
 func cmdShow(args []string) error {
-	clip := false
-	name := ""
-	for _, a := range args {
-		if a == "-c" {
-			clip = true
-		} else {
-			name = a
-		}
+	opts, err := parseOptions(args, []flagSpec{{short: 'c', long: "clip", optValue: true}})
+	if err != nil {
+		return err
 	}
-	if name == "" {
-		return fmt.Errorf("usage: winpass show [-c] <name>")
+	if len(opts.positional) != 1 {
+		return fmt.Errorf("usage: winpass show [--clip[=line], -c[line]] <name>")
 	}
+	name := opts.positional[0]
 
 	password, err := credRead(name)
 	if err != nil {
 		return err
 	}
 
-	if clip {
-		return copyToClipboard(firstLine(password))
+	if opts.flags["clip"] {
+		line := opts.values["clip"]
+		if line == 0 {
+			line = 1
+		}
+		text, ok := nthLine(password, line)
+		if !ok {
+			return fmt.Errorf("there is no line %d in %s", line, name)
+		}
+		return copyToClipboard(text)
 	}
 	fmt.Println(password)
 	return nil
@@ -230,11 +234,13 @@ func cmdFind(args []string) error {
 	return nil
 }
 
-func firstLine(s string) string {
-	if idx := strings.IndexByte(s, '\n'); idx >= 0 {
-		return s[:idx]
+// nthLine returns the 1-based line n of s without its line terminator.
+func nthLine(s string, n int) (string, bool) {
+	lines := strings.Split(s, "\n")
+	if n < 1 || n > len(lines) {
+		return "", false
 	}
-	return s
+	return strings.TrimSuffix(lines[n-1], "\r"), true
 }
 
 var (
