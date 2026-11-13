@@ -59,6 +59,8 @@ func main() {
 		err = cmdExport(args)
 	case "import":
 		err = cmdImport(args)
+	case clearClipboardCmd:
+		err = cmdClearClipboard(args)
 	case "help", "--help", "-h":
 		fmt.Print(usage)
 	case "version", "--version", "-v":
