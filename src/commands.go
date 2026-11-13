@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -41,22 +42,72 @@ func cmdShow(args []string) error {
 	return nil
 }
 
-func cmdInsert(args []string) error {
-	multiline := false
-	name := ""
-	for _, a := range args {
-		if a == "-m" || a == "--multiline" {
-			multiline = true
-		} else {
-			name = a
-		}
+// entryExists reports whether an entry is stored under name.
+func entryExists(name string) (bool, error) {
+	_, err := credRead(name)
+	if err == nil {
+		return true, nil
 	}
-	if name == "" {
-		return fmt.Errorf("usage: winpass insert [-m] <name>")
+	if errors.Is(err, errEntryNotFound) {
+		return false, nil
+	}
+	return false, err
+}
+
+// confirm asks a yes/no question on stdout and reads the answer from stdin.
+func confirm(prompt string) bool {
+	fmt.Printf("%s [y/N] ", prompt)
+	answer, _ := readLine()
+	return strings.EqualFold(strings.TrimSpace(answer), "y")
+}
+
+// confirmOverwrite returns true if name does not exist, force is set, or the
+// user agrees to overwrite it.
+func confirmOverwrite(name string, force bool) (bool, error) {
+	if force {
+		return true, nil
+	}
+	exists, err := entryExists(name)
+	if err != nil || !exists {
+		return true, err
+	}
+	return confirm(fmt.Sprintf("An entry already exists for %s. Overwrite it?", name)), nil
+}
+
+func cmdInsert(args []string) error {
+	opts, err := parseOptions(args, []flagSpec{
+		{short: 'm', long: "multiline"},
+		{short: 'e', long: "echo"},
+		{short: 'f', long: "force"},
+	})
+	if err != nil {
+		return err
+	}
+	if len(opts.positional) != 1 {
+		return fmt.Errorf("usage: winpass insert [--echo, -e | --multiline, -m] [--force, -f] <name>")
+	}
+	name := opts.positional[0]
+	if opts.flags["multiline"] && opts.flags["echo"] {
+		return fmt.Errorf("--echo and --multiline cannot be combined")
+	}
+
+	ok, err := confirmOverwrite(name, opts.flags["force"])
+	if err != nil {
+		return err
+	}
+	if !ok {
+		fmt.Println("Aborted.")
+		return nil
 	}
 
 	var password string
-	if multiline {
+	if opts.flags["echo"] {
+		fmt.Printf("Enter password for %s: ", name)
+		password, err = readLine()
+		if err != nil {
+			return err
+		}
+	} else if opts.flags["multiline"] {
 		fmt.Printf("Enter contents of %s (Ctrl+Z to finish on Windows):\n", name)
 		buf := make([]byte, maxBlobSize)
 		n, err := os.Stdin.Read(buf)

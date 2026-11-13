@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"syscall"
@@ -37,6 +38,8 @@ type winCred struct {
 	TargetAlias        *uint16
 	UserName           *uint16
 }
+
+var errEntryNotFound = errors.New("entry not found")
 
 func targetName(name string) string {
 	return storePrefix + name
@@ -109,7 +112,7 @@ func credRead(name string) (string, error) {
 	)
 	if ret == 0 {
 		if lastErr == syscall.ERROR_NOT_FOUND {
-			return "", fmt.Errorf("entry not found: %s", name)
+			return "", fmt.Errorf("%w: %s", errEntryNotFound, name)
 		}
 		return "", fmt.Errorf("CredReadW: %w", lastErr)
 	}
