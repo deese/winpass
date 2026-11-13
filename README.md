@@ -24,10 +24,13 @@ winpass <command> [args]
 | `insert [-e \| -m] [-f] <name>` | Insert password interactively. `-e` echoes input, `-m` multiline, `-f` skips the overwrite prompt |
 | `generate [-c] [-n] [-i \| -f] <name> [length]` | Generate random password (default length: 25). `-c` copies, `-n` no symbols, `-i` replaces only the first line of an existing entry, `-f` skips the overwrite prompt |
 | `rm [-r] [-f] <name>` | Delete entry. `-r` deletes a directory recursively, `-f` skips the confirmation |
-| `mv [-f] <old> <new>` | Rename entry. Prompts before overwriting unless `-f` |
-| `cp [-f] <old> <new>` | Copy entry. Prompts before overwriting unless `-f` |
+| `edit <name>` | Edit an entry with `$EDITOR` (default: `notepad.exe`). See the note below |
+| `mv [-f] <old> <new>` | Rename or move an entry or a whole directory. A trailing `/` or an existing directory as destination means "into it". Prompts before overwriting unless `-f` |
+| `cp [-f] <old> <new>` | Same as `mv`, but copies |
 | `ls [filter]` | List all entries as a tree |
-| `find <term>` | Search entries by name |
+| `find <term>...` | Search entries by name. An entry matches if it contains any of the terms |
+| `grep [-i] <regex>` | Search inside decrypted entries (Go RE2 syntax, not grep's). Prints matching lines, including the password line if it matches |
+| `init` | No-op, kept so scripts written for pass do not fail |
 | `export <file>` | Export all entries to a passphrase-encrypted file (AES-256-GCM, PBKDF2-SHA256) |
 | `import [-f] <file>` | Import entries from an export file. Existing entries are skipped unless `-f` is given |
 | `completion powershell` | Print the PowerShell tab-completion script |
@@ -55,6 +58,10 @@ The `-c` flag copies only the first line of the stored value (the password), or 
 ### PowerShell tab completion
 
 Paste the output of `winpass completion powershell` into your `$PROFILE`. It works in Constrained Language Mode and completes subcommands and entry names. Entry names are read from the credential store; values are never decrypted for completion.
+
+### Editing
+
+`edit` writes the entry to a temporary file in `%TEMP%`, runs `$EDITOR` and stores the result. The temporary file is overwritten with zeros and deleted afterwards. This is best-effort only: it does not defeat SSD wear levelling or filesystem journaling, so the plaintext may remain recoverable from disk. `$EDITOR` may include arguments (for example `code --wait`), and the editor must block until the file is closed.
 
 ### Hierarchy
 
