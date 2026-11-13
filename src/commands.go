@@ -109,12 +109,15 @@ func cmdInsert(args []string) error {
 		}
 	} else if opts.flags["multiline"] {
 		fmt.Printf("Enter contents of %s (Ctrl+Z to finish on Windows):\n", name)
-		buf := make([]byte, maxBlobSize)
-		n, err := os.Stdin.Read(buf)
-		if err != nil && n == 0 {
+		// Read until EOF; one byte over the limit is enough to detect oversized input
+		data, err := io.ReadAll(io.LimitReader(os.Stdin, maxBlobSize+1))
+		if err != nil {
 			return fmt.Errorf("read error: %w", err)
 		}
-		password = string(buf[:n])
+		if len(data) > maxBlobSize {
+			return fmt.Errorf("input exceeds Windows credential blob limit (%d bytes)", maxBlobSize)
+		}
+		password = string(data)
 	} else {
 		fmt.Printf("Enter password for %s: ", name)
 		p1, err := readPassword()
