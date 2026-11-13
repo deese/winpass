@@ -208,21 +208,59 @@ func cmdGenerate(args []string) error {
 }
 
 func cmdRm(args []string) error {
-	if len(args) == 0 {
-		return fmt.Errorf("usage: winpass rm <name>")
-	}
-	name := args[0]
-	fmt.Printf("Are you sure you want to delete %s? [y/N] ", name)
-	var confirm string
-	fmt.Scanln(&confirm)
-	if strings.ToLower(confirm) != "y" {
-		fmt.Println("Aborted.")
-		return nil
-	}
-	if err := credDelete(name); err != nil {
+	opts, err := parseOptions(args, []flagSpec{
+		{short: 'r', long: "recursive"},
+		{short: 'f', long: "force"},
+	})
+	if err != nil {
 		return err
 	}
-	fmt.Printf("Deleted %s.\n", name)
+	if len(opts.positional) != 1 {
+		return fmt.Errorf("usage: winpass rm [--recursive, -r] [--force, -f] <name>")
+	}
+	name := strings.TrimSuffix(opts.positional[0], "/")
+	force := opts.flags["force"]
+
+	// Entries to delete: the exact entry and, with -r, everything below name/
+	exists, err := entryExists(name)
+	if err != nil {
+		return err
+	}
+	var targets []string
+	if exists {
+		targets = append(targets, name)
+	}
+	children, err := credEnumerate(name + "/")
+	if err != nil {
+		return err
+	}
+	sort.Strings(children)
+	if len(children) > 0 {
+		if !opts.flags["recursive"] {
+			return fmt.Errorf("%s is a directory, use -r to delete it recursively", name)
+		}
+		targets = append(targets, children...)
+	}
+	if len(targets) == 0 {
+		return fmt.Errorf("%w: %s", errEntryNotFound, name)
+	}
+
+	if !force {
+		prompt := fmt.Sprintf("Are you sure you want to delete %s?", name)
+		if len(children) > 0 {
+			prompt = fmt.Sprintf("Are you sure you want to delete %s and its %d entries below it?", name, len(children))
+		}
+		if !confirm(prompt) {
+			fmt.Println("Aborted.")
+			return nil
+		}
+	}
+	for _, t := range targets {
+		if err := credDelete(t); err != nil {
+			return err
+		}
+		fmt.Printf("Deleted %s.\n", t)
+	}
 	return nil
 }
 
