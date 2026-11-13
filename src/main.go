@@ -21,6 +21,7 @@ Commands:
   find <term>          Search entries
   export <file>        Export all entries to an encrypted file
   import [-f] <file>   Import entries from an encrypted file (-f overwrites)
+  init                 No-op, kept for pass compatibility
   completion powershell  Print the PowerShell tab-completion script
   help                 Show this help
   version              Show version
@@ -60,6 +61,9 @@ func main() {
 		err = cmdExport(args)
 	case "import":
 		err = cmdImport(args)
+	case "init":
+		// pass compatibility: DPAPI needs no key setup, so scripts calling init keep working
+		fmt.Fprintln(os.Stderr, "winpass: init is not needed, entries are protected by DPAPI. Nothing to do.")
 	case completeCmd:
 		err = cmdComplete(args)
 	case "completion":
