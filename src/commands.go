@@ -141,39 +141,61 @@ func cmdInsert(args []string) error {
 }
 
 func cmdGenerate(args []string) error {
-	clip := false
-	noSymbols := false
-	name := ""
-	length := defaultPasswordLength
-
-	for i := 0; i < len(args); i++ {
-		switch args[i] {
-		case "-c":
-			clip = true
-		case "-n", "--no-symbols":
-			noSymbols = true
-		default:
-			if name == "" {
-				name = args[i]
-			} else {
-				n, err := strconv.Atoi(args[i])
-				if err != nil {
-					return fmt.Errorf("invalid length: %s", args[i])
-				}
-				length = n
-			}
-		}
-	}
-	if name == "" {
-		return fmt.Errorf("usage: winpass generate [-c] [-n] <name> [length]")
-	}
-	_ = noSymbols // TODO: add alphanumeric-only charset when flag is set
-
-	password, err := generatePassword(length)
+	opts, err := parseOptions(args, []flagSpec{
+		{short: 'c', long: "clip"},
+		{short: 'n', long: "no-symbols"},
+		{short: 'i', long: "in-place"},
+		{short: 'f', long: "force"},
+	})
 	if err != nil {
 		return err
 	}
-	if err := credWrite(name, password); err != nil {
+	const usage = "usage: winpass generate [--no-symbols, -n] [--clip, -c] [--in-place, -i | --force, -f] <name> [length]"
+	if len(opts.positional) < 1 || len(opts.positional) > 2 {
+		return fmt.Errorf(usage)
+	}
+	if opts.flags["in-place"] && opts.flags["force"] {
+		return fmt.Errorf("--in-place and --force cannot be combined")
+	}
+	name := opts.positional[0]
+	clip := opts.flags["clip"]
+	inPlace := opts.flags["in-place"]
+
+	length := defaultPasswordLength
+	if len(opts.positional) == 2 {
+		n, err := strconv.Atoi(opts.positional[1])
+		if err != nil || n < 1 {
+			return fmt.Errorf("invalid length: %s", opts.positional[1])
+		}
+		length = n
+	}
+
+	// In-place keeps everything after the first line of the existing entry
+	rest := ""
+	if inPlace {
+		existing, err := credRead(name)
+		if err != nil {
+			return err
+		}
+		if idx := strings.IndexByte(existing, '\n'); idx >= 0 {
+			rest = existing[idx:]
+		}
+	} else {
+		ok, err := confirmOverwrite(name, opts.flags["force"])
+		if err != nil {
+			return err
+		}
+		if !ok {
+			fmt.Println("Aborted.")
+			return nil
+		}
+	}
+
+	password, err := generatePassword(length, !opts.flags["no-symbols"])
+	if err != nil {
+		return err
+	}
+	if err := credWrite(name, password+rest); err != nil {
 		return err
 	}
 
