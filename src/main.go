@@ -13,6 +13,7 @@ const usage = `Usage: winpass <command> [args]
 Commands:
   show <name>          Show password (optionally copy with -c)
   insert <name>        Insert new password
+  edit <name>          Edit an entry with $EDITOR (default: notepad)
   generate <name> [n]  Generate password of length n (default 25)
   rm <name>            Remove entry
   mv <old> <new>       Rename entry
@@ -62,6 +63,8 @@ func main() {
 		err = cmdExport(args)
 	case "import":
 		err = cmdImport(args)
+	case "edit":
+		err = cmdEdit(args)
 	case "grep":
 		err = cmdGrep(args)
 	case "init":
