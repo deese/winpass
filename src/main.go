@@ -18,7 +18,8 @@ Commands:
   mv <old> <new>       Rename entry
   cp <old> <new>       Copy entry
   ls [filter]          List entries
-  find <term>          Search entries
+  find <term>...       Search entries by name
+  grep [-i] <regex>    Search inside decrypted entries
   export <file>        Export all entries to an encrypted file
   import [-f] <file>   Import entries from an encrypted file (-f overwrites)
   init                 No-op, kept for pass compatibility
@@ -61,6 +62,8 @@ func main() {
 		err = cmdExport(args)
 	case "import":
 		err = cmdImport(args)
+	case "grep":
+		err = cmdGrep(args)
 	case "init":
 		// pass compatibility: DPAPI needs no key setup, so scripts calling init keep working
 		fmt.Fprintln(os.Stderr, "winpass: init is not needed, entries are protected by DPAPI. Nothing to do.")

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -383,6 +384,54 @@ func cmdFind(args []string) error {
 	fmt.Printf("Search results for %q:\n", label)
 	for _, m := range matches {
 		fmt.Printf("  %s\n", m)
+	}
+	return nil
+}
+
+// cmdGrep prints, for every entry, the decrypted lines matching a regular
+// expression. Matching lines are printed as-is, including the password line.
+func cmdGrep(args []string) error {
+	opts, err := parseOptions(args, []flagSpec{{short: 'i', long: "ignore-case"}})
+	if err != nil {
+		return err
+	}
+	if len(opts.positional) != 1 {
+		return fmt.Errorf("usage: winpass grep [--ignore-case, -i] <regex>")
+	}
+	pattern := opts.positional[0]
+	if opts.flags["ignore-case"] {
+		pattern = "(?i)" + pattern
+	}
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		return fmt.Errorf("invalid regex: %w", err)
+	}
+
+	names, err := credEnumerate("")
+	if err != nil {
+		return err
+	}
+	sort.Strings(names)
+	for _, name := range names {
+		content, err := credRead(name)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: skipping %s: %v\n", name, err)
+			continue
+		}
+		var hits []string
+		for _, line := range strings.Split(content, "\n") {
+			line = strings.TrimSuffix(line, "\r")
+			if re.MatchString(line) {
+				hits = append(hits, line)
+			}
+		}
+		if len(hits) == 0 {
+			continue
+		}
+		fmt.Printf("%s:\n", name)
+		for _, h := range hits {
+			fmt.Println(h)
+		}
 	}
 	return nil
 }
