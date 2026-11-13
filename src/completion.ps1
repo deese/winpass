@@ -3,8 +3,8 @@
 Register-ArgumentCompleter -Native -CommandName winpass, winpass.exe -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
 
-    $subcommands = 'show', 'insert', 'generate', 'rm', 'mv', 'cp', 'ls', 'find', 'export', 'import', 'help', 'version', 'completion'
-    $entrySubcommands = 'show', 'insert', 'generate', 'rm', 'mv', 'cp', 'ls', 'remove', 'rename', 'copy', 'list'
+    $subcommands = 'show', 'insert', 'edit', 'generate', 'rm', 'mv', 'cp', 'ls', 'find', 'grep', 'init', 'export', 'import', 'help', 'version', 'completion'
+    $entrySubcommands = 'show', 'insert', 'edit', 'generate', 'rm', 'mv', 'cp', 'ls', 'remove', 'rename', 'copy', 'list'
 
     # String interpolation avoids method calls, which CLM restricts on non-core types
     $elements = @($commandAst.CommandElements | ForEach-Object { "$_" })
