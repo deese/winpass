@@ -20,16 +20,17 @@ winpass <command> [args]
 
 | Command | Description |
 |---|---|
-| `show [-c] <name>` | Print password. `-c` copies to clipboard instead |
-| `insert [-m] <name>` | Insert password interactively. `-m` for multiline |
-| `generate [-c] [-n] <name> [length]` | Generate random password (default length: 25). `-c` copies, `-n` no symbols |
-| `rm <name>` | Delete entry (prompts for confirmation) |
-| `mv <old> <new>` | Rename entry |
-| `cp <old> <new>` | Copy entry |
+| `show [-c[line]] <name>` | Print password. `-c` copies the first (or given) line to the clipboard instead |
+| `insert [-e \| -m] [-f] <name>` | Insert password interactively. `-e` echoes input, `-m` multiline, `-f` skips the overwrite prompt |
+| `generate [-c] [-n] [-i \| -f] <name> [length]` | Generate random password (default length: 25). `-c` copies, `-n` no symbols, `-i` replaces only the first line of an existing entry, `-f` skips the overwrite prompt |
+| `rm [-r] [-f] <name>` | Delete entry. `-r` deletes a directory recursively, `-f` skips the confirmation |
+| `mv [-f] <old> <new>` | Rename entry. Prompts before overwriting unless `-f` |
+| `cp [-f] <old> <new>` | Copy entry. Prompts before overwriting unless `-f` |
 | `ls [filter]` | List all entries as a tree |
 | `find <term>` | Search entries by name |
 | `export <file>` | Export all entries to a passphrase-encrypted file (AES-256-GCM, PBKDF2-SHA256) |
 | `import [-f] <file>` | Import entries from an export file. Existing entries are skipped unless `-f` is given |
+| `completion powershell` | Print the PowerShell tab-completion script |
 | `version` | Print version |
 
 A bare name with no subcommand acts as `show`:
@@ -40,7 +41,20 @@ winpass email/gmail
 
 ### Clipboard
 
-The `-c` flag copies only the first line of the stored value (the password). The clipboard is cleared automatically after 45 seconds.
+The `-c` flag copies only the first line of the stored value (the password), or line N with `-cN`. The clipboard is cleared automatically after 45 seconds (`PASSWORD_STORE_CLIP_TIME`), by a detached copy of `winpass.exe`. The clear is skipped if you copied something else in the meantime. The copied value is flagged to be excluded from Windows clipboard history and the cloud clipboard.
+
+### Environment variables
+
+| Variable | Description |
+|---|---|
+| `PASSWORD_STORE_CLIP_TIME` | Seconds before the clipboard is cleared (default: 45) |
+| `PASSWORD_STORE_GENERATED_LENGTH` | Default length for `generate` (default: 25) |
+| `PASSWORD_STORE_CHARACTER_SET` | Characters used by `generate`. Literal characters only, `tr` classes such as `[:alnum:]` are not supported |
+| `PASSWORD_STORE_CHARACTER_SET_NO_SYMBOLS` | Same, used with `-n` |
+
+### PowerShell tab completion
+
+Paste the output of `winpass completion powershell` into your `$PROFILE`. It works in Constrained Language Mode and completes subcommands and entry names. Entry names are read from the credential store; values are never decrypted for completion.
 
 ### Hierarchy
 
