@@ -92,6 +92,10 @@ func setHistoryOptOut() {
 }
 
 func copyToClipboard(text string) error {
+	clearSeconds, err := envPositiveInt(envClipTime, clipClearSeconds)
+	if err != nil {
+		return err
+	}
 	utf16, err := syscall.UTF16FromString(text)
 	if err != nil {
 		return err
@@ -121,11 +125,11 @@ func copyToClipboard(text string) error {
 	// Sequence number after our last write; the cleaner only clears if it is unchanged
 	seq, _, _ := procGetClipboardSequenceNumber.Call()
 
-	if err := spawnClipboardCleaner(clipClearSeconds, uint32(seq)); err != nil {
+	if err := spawnClipboardCleaner(clearSeconds, uint32(seq)); err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: could not schedule clipboard clear: %v\n", err)
 		return nil
 	}
-	fmt.Printf("Copied to clipboard. Will clear in %d seconds.\n", clipClearSeconds)
+	fmt.Printf("Copied to clipboard. Will clear in %d seconds.\n", clearSeconds)
 	return nil
 }
 

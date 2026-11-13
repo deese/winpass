@@ -161,7 +161,10 @@ func cmdGenerate(args []string) error {
 	clip := opts.flags["clip"]
 	inPlace := opts.flags["in-place"]
 
-	length := defaultPasswordLength
+	length, err := envPositiveInt(envGeneratedLength, defaultPasswordLength)
+	if err != nil {
+		return err
+	}
 	if len(opts.positional) == 2 {
 		n, err := strconv.Atoi(opts.positional[1])
 		if err != nil || n < 1 {
