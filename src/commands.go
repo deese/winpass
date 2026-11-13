@@ -353,25 +353,34 @@ func cmdLs(args []string) error {
 
 func cmdFind(args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("usage: winpass find <term>")
+		return fmt.Errorf("usage: winpass find <term>...")
 	}
-	term := strings.ToLower(args[0])
+	terms := make([]string, len(args))
+	for i, a := range args {
+		terms[i] = strings.ToLower(a)
+	}
 	names, err := credEnumerate("")
 	if err != nil {
 		return err
 	}
+	// An entry matches when its name contains any of the terms, like pass
 	var matches []string
 	for _, n := range names {
-		if strings.Contains(strings.ToLower(n), term) {
-			matches = append(matches, n)
+		lower := strings.ToLower(n)
+		for _, term := range terms {
+			if strings.Contains(lower, term) {
+				matches = append(matches, n)
+				break
+			}
 		}
 	}
+	label := strings.Join(args, "|")
 	if len(matches) == 0 {
-		fmt.Printf("No matches for %q.\n", term)
+		fmt.Printf("No matches for %q.\n", label)
 		return nil
 	}
 	sort.Strings(matches)
-	fmt.Printf("Search results for %q:\n", args[0])
+	fmt.Printf("Search results for %q:\n", label)
 	for _, m := range matches {
 		fmt.Printf("  %s\n", m)
 	}
