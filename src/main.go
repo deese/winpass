@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 // version is overridden at build time via -ldflags "-X main.version=<tag>"
@@ -34,6 +35,43 @@ Flags:
   -c   Copy password to clipboard instead of printing
 `
 
+// commandAliases maps alternative command names to the name used in usage.
+var commandAliases = map[string]string{
+	"remove": "rm",
+	"rename": "mv",
+	"copy":   "cp",
+	"list":   "ls",
+	"search": "find",
+}
+
+// wantsHelp reports whether args ask for command help. Anything after "--"
+// is a positional argument and is ignored.
+func wantsHelp(args []string) bool {
+	for _, a := range args {
+		if a == "--" {
+			return false
+		}
+		if a == "--help" || a == "-h" {
+			return true
+		}
+	}
+	return false
+}
+
+// commandHelp returns the usage line of a command, or "" if it has none.
+func commandHelp(cmd string) string {
+	if canonical, ok := commandAliases[cmd]; ok {
+		cmd = canonical
+	}
+	for _, line := range strings.Split(usage, "\n") {
+		fields := strings.Fields(line)
+		if strings.HasPrefix(line, "  ") && len(fields) > 0 && fields[0] == cmd {
+			return strings.TrimSpace(line)
+		}
+	}
+	return ""
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Print(usage)
@@ -42,6 +80,13 @@ func main() {
 
 	cmd := os.Args[1]
 	args := os.Args[2:]
+
+	if wantsHelp(args) {
+		if line := commandHelp(cmd); line != "" {
+			fmt.Println("winpass " + line)
+			return
+		}
+	}
 
 	var err error
 	switch cmd {
