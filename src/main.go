@@ -11,22 +11,22 @@ var version = "dev"
 const usage = `Usage: winpass <command> [args]
 
 Commands:
-  show <name>          Show password (optionally copy with -c)
-  insert <name>        Insert new password
-  edit <name>          Edit an entry with $EDITOR (default: notepad)
-  generate <name> [n]  Generate password of length n (default 25)
-  rm <name>            Remove entry
-  mv <old> <new>       Rename entry
-  cp <old> <new>       Copy entry
-  ls [filter]          List entries
-  find <term>...       Search entries by name
-  grep [-i] <regex>    Search inside decrypted entries
-  export <file>        Export all entries to an encrypted file
-  import [-f] <file>   Import entries from an encrypted file (-f overwrites)
-  init                 No-op, kept for pass compatibility
-  completion powershell  Print the PowerShell tab-completion script
-  help                 Show this help
-  version              Show version
+  show <name>             Show password (optionally copy with -c)
+  insert <name>           Insert new password
+  edit <name>             Edit an entry with $EDITOR (default: notepad)
+  generate <name> [n]     Generate password of length n (default 25)
+  rm <name>               Remove entry
+  mv <old> <new>          Rename entry
+  cp <old> <new>          Copy entry
+  ls [filter]             List entries
+  find <term>...          Search entries by name
+  grep [-i] <regex>       Search inside decrypted entries
+  export <file>           Export all entries to an encrypted file
+  import [-f] <file>      Import entries from an encrypted file (-f overwrites)
+  init                    No-op, kept for pass compatibility
+  completion powershell   Print the PowerShell tab-completion script
+  help                    Show this help
+  version                 Show version
 
 Flags:
   -c   Copy password to clipboard instead of printing
