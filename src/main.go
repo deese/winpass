@@ -129,8 +129,8 @@ func main() {
 	case "grep":
 		err = cmdGrep(args)
 	case "init":
-		// pass compatibility: DPAPI needs no key setup, so scripts calling init keep working
-		fmt.Fprintln(os.Stderr, "winpass: init is not needed, entries are protected by DPAPI. Nothing to do.")
+		// pass compatibility: there is no store to initialize, so scripts calling init keep working
+		fmt.Fprintln(os.Stderr, "winpass: init is not needed, entries are encrypted automatically. See 'winpass status' and 'winpass setup'. Nothing to do.")
 	case completeCmd:
 		err = cmdComplete(args)
 	case "completion":

@@ -3,7 +3,7 @@
 Register-ArgumentCompleter -Native -CommandName winpass, winpass.exe -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
 
-    $subcommands = 'show', 'insert', 'edit', 'generate', 'rm', 'mv', 'cp', 'ls', 'find', 'grep', 'init', 'export', 'import', 'help', 'version', 'completion'
+    $subcommands = 'show', 'insert', 'edit', 'generate', 'rm', 'mv', 'cp', 'ls', 'find', 'grep', 'init', 'export', 'import', 'verify', 'migrate', 'setup', 'status', 'help', 'version', 'completion'
     $entrySubcommands = 'show', 'insert', 'edit', 'generate', 'rm', 'mv', 'cp', 'ls', 'remove', 'rename', 'copy', 'list'
 
     # String interpolation avoids method calls, which CLM restricts on non-core types
@@ -23,6 +23,15 @@ Register-ArgumentCompleter -Native -CommandName winpass, winpass.exe -ScriptBloc
     }
     elseif ($elements[1] -eq 'completion' -and $position -eq 2) {
         $candidates = @('powershell')
+    }
+    elseif ($elements[1] -eq 'setup' -and $position -eq 2) {
+        $candidates = @('keyfile', 'tpm')
+    }
+    elseif ($elements[1] -eq 'migrate' -and $wordToComplete -like '-*') {
+        $candidates = @('--to', '--skip-backup')
+    }
+    elseif ($elements[1] -eq 'migrate' -and $elements[$position - 1] -eq '--to') {
+        $candidates = @('default', 'keyfile', 'tpm')
     }
 
     $candidates | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
