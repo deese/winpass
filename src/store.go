@@ -66,10 +66,19 @@ func utf16ToString(p *uint16) string {
 	return syscall.UTF16ToString(slice)
 }
 
+// credWrite encrypts password with the active mode and stores it.
 func credWrite(name, password string) error {
-	blob := []byte(password)
+	blob, err := encryptEntry(name, password)
+	if err != nil {
+		return err
+	}
+	return credWriteRaw(name, blob)
+}
+
+// credWriteRaw stores an already encrypted blob as-is.
+func credWriteRaw(name string, blob []byte) error {
 	if len(blob) > maxBlobSize {
-		return fmt.Errorf("password exceeds Windows credential blob limit (%d bytes)", maxBlobSize)
+		return fmt.Errorf("entry exceeds Windows credential blob limit (%d bytes, of which %d are encryption overhead)", maxBlobSize, blobOverhead)
 	}
 
 	target, err := utf16Ptr(targetName(name))
@@ -97,10 +106,20 @@ func credWrite(name, password string) error {
 	return nil
 }
 
+// credRead loads an entry and decrypts it.
 func credRead(name string) (string, error) {
-	target, err := utf16Ptr(targetName(name))
+	blob, err := credReadRaw(name)
 	if err != nil {
 		return "", err
+	}
+	return decryptEntry(name, blob)
+}
+
+// credReadRaw returns the stored blob without decrypting it.
+func credReadRaw(name string) ([]byte, error) {
+	target, err := utf16Ptr(targetName(name))
+	if err != nil {
+		return nil, err
 	}
 
 	var pcred *winCred
@@ -112,17 +131,17 @@ func credRead(name string) (string, error) {
 	)
 	if ret == 0 {
 		if lastErr == syscall.ERROR_NOT_FOUND {
-			return "", fmt.Errorf("%w: %s", errEntryNotFound, name)
+			return nil, fmt.Errorf("%w: %s", errEntryNotFound, name)
 		}
-		return "", fmt.Errorf("CredReadW: %w", lastErr)
+		return nil, fmt.Errorf("CredReadW: %w", lastErr)
 	}
 	defer procCredFree.Call(uintptr(unsafe.Pointer(pcred)))
 
 	if pcred.CredentialBlobSize == 0 {
-		return "", nil
+		return nil, nil
 	}
-	blob := unsafe.Slice(pcred.CredentialBlob, pcred.CredentialBlobSize)
-	return string(blob), nil
+	// Copy: the buffer is owned by CredFree
+	return append([]byte(nil), unsafe.Slice(pcred.CredentialBlob, pcred.CredentialBlobSize)...), nil
 }
 
 func credDelete(name string) error {
