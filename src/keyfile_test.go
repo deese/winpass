@@ -14,6 +14,11 @@ func isolateKeyfile(t *testing.T) {
 	t.Helper()
 	t.Setenv(keyfileEnv, "")
 	t.Setenv("LOCALAPPDATA", t.TempDir())
+
+	// Point the TPM lookup at a key that cannot exist, so a real winpass TPM key does not leak in
+	previous := tpmKeyName
+	tpmKeyName = "winpass-test-missing"
+	t.Cleanup(func() { tpmKeyName = previous })
 }
 
 func TestCreateKeyfile(t *testing.T) {

@@ -77,11 +77,16 @@ func credWrite(name, password string) error {
 
 // credWriteRaw stores an already encrypted blob as-is.
 func credWriteRaw(name string, blob []byte) error {
+	return credWriteTarget(targetName(name), blob)
+}
+
+// credWriteTarget stores a blob under a full credential target name.
+func credWriteTarget(targetStr string, blob []byte) error {
 	if len(blob) > maxBlobSize {
 		return fmt.Errorf("entry exceeds Windows credential blob limit (%d bytes, of which %d are encryption overhead)", maxBlobSize, blobOverhead)
 	}
 
-	target, err := utf16Ptr(targetName(name))
+	target, err := utf16Ptr(targetStr)
 	if err != nil {
 		return err
 	}
@@ -117,7 +122,17 @@ func credRead(name string) (string, error) {
 
 // credReadRaw returns the stored blob without decrypting it.
 func credReadRaw(name string) ([]byte, error) {
-	target, err := utf16Ptr(targetName(name))
+	blob, err := credReadTarget(targetName(name))
+	if errors.Is(err, errEntryNotFound) {
+		return nil, fmt.Errorf("%w: %s", errEntryNotFound, name)
+	}
+	return blob, err
+}
+
+// credReadTarget reads a blob by full credential target name. A missing
+// target returns errEntryNotFound.
+func credReadTarget(targetStr string) ([]byte, error) {
+	target, err := utf16Ptr(targetStr)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +146,7 @@ func credReadRaw(name string) ([]byte, error) {
 	)
 	if ret == 0 {
 		if lastErr == syscall.ERROR_NOT_FOUND {
-			return nil, fmt.Errorf("%w: %s", errEntryNotFound, name)
+			return nil, errEntryNotFound
 		}
 		return nil, fmt.Errorf("CredReadW: %w", lastErr)
 	}
@@ -145,7 +160,17 @@ func credReadRaw(name string) ([]byte, error) {
 }
 
 func credDelete(name string) error {
-	target, err := utf16Ptr(targetName(name))
+	err := credDeleteTarget(targetName(name))
+	if errors.Is(err, errEntryNotFound) {
+		return fmt.Errorf("entry not found: %s", name)
+	}
+	return err
+}
+
+// credDeleteTarget deletes by full credential target name. A missing target
+// returns errEntryNotFound.
+func credDeleteTarget(targetStr string) error {
+	target, err := utf16Ptr(targetStr)
 	if err != nil {
 		return err
 	}
@@ -157,7 +182,7 @@ func credDelete(name string) error {
 	)
 	if ret == 0 {
 		if lastErr == syscall.ERROR_NOT_FOUND {
-			return fmt.Errorf("entry not found: %s", name)
+			return errEntryNotFound
 		}
 		return fmt.Errorf("CredDeleteW: %w", lastErr)
 	}

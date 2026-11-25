@@ -24,7 +24,9 @@ Commands:
   grep [-i] <regex>       Search inside decrypted entries
   export <file>           Export all entries to an encrypted file
   import [-f] <file>      Import entries from an encrypted file (-f overwrites)
+  status                  Show the active key mode and how entries are stored
   setup keyfile [path]    Create a keyfile used as encryption key (--remove deletes it)
+  setup tpm               Create a TPM-backed key (--remove deletes it)
   verify <file> [<name>]  Check an export against the store; with a name, show or copy (-c) that entry
   migrate [--to <mode>]   Re-encrypt all entries with a key mode (--skip-backup skips the prompt)
   init                    No-op, kept for pass compatibility
@@ -59,18 +61,19 @@ func wantsHelp(args []string) bool {
 	return false
 }
 
-// commandHelp returns the usage line of a command, or "" if it has none.
-func commandHelp(cmd string) string {
+// commandHelp returns the usage lines of a command, none if it has no entry.
+func commandHelp(cmd string) []string {
 	if canonical, ok := commandAliases[cmd]; ok {
 		cmd = canonical
 	}
+	var lines []string
 	for _, line := range strings.Split(usage, "\n") {
 		fields := strings.Fields(line)
 		if strings.HasPrefix(line, "  ") && len(fields) > 0 && fields[0] == cmd {
-			return strings.TrimSpace(line)
+			lines = append(lines, strings.TrimSpace(line))
 		}
 	}
-	return ""
+	return lines
 }
 
 func main() {
@@ -83,8 +86,10 @@ func main() {
 	args := os.Args[2:]
 
 	if wantsHelp(args) {
-		if line := commandHelp(cmd); line != "" {
-			fmt.Println("winpass " + line)
+		if lines := commandHelp(cmd); len(lines) > 0 {
+			for _, line := range lines {
+				fmt.Println("winpass " + line)
+			}
 			return
 		}
 	}
@@ -111,6 +116,8 @@ func main() {
 		err = cmdExport(args)
 	case "import":
 		err = cmdImport(args)
+	case "status":
+		err = cmdStatus(args)
 	case "setup":
 		err = cmdSetup(args)
 	case "verify":

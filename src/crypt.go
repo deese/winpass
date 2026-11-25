@@ -109,10 +109,33 @@ func readMachineGUID() (string, error) {
 	return guid, nil
 }
 
-// activeMode is the mode used for new writes.
+// activeMode is the mode used for new writes. Priority: keyfile, TPM, default.
+// TPM mode is selected by the setup marker, not by probing the TPM. If the
+// key is gone, writing fails loudly instead of silently downgrading.
 func activeMode() (byte, error) {
 	path, explicit := keyfilePath()
-	return chooseMode(path, explicit)
+	mode, err := chooseMode(path, explicit)
+	if err != nil || mode == modeKeyfile {
+		return mode, err
+	}
+	marked, err := hasTPMMarker()
+	if err != nil {
+		return 0, err
+	}
+	if marked {
+		return modeTPM, nil
+	}
+	return modeDefault, nil
+}
+
+// modeLabel is the user-facing name of a mode.
+func modeLabel(mode byte) string {
+	for name, m := range modeNames {
+		if m == mode {
+			return name
+		}
+	}
+	return fmt.Sprintf("unknown(%d)", mode)
 }
 
 // keyForMode returns the key and key ID of a mode.
@@ -123,6 +146,8 @@ func keyForMode(mode byte) ([]byte, keyID, error) {
 		return key, keyID{}, err
 	case modeKeyfile:
 		return keyfileKey()
+	case modeTPM:
+		return tpmKey()
 	default:
 		return nil, keyID{}, fmt.Errorf("%w: %d", errUnsupportedMode, mode)
 	}

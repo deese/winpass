@@ -1,6 +1,7 @@
 package main
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -26,19 +27,23 @@ func TestWantsHelp(t *testing.T) {
 }
 
 func TestCommandHelp(t *testing.T) {
-	for _, cmd := range []string{"show", "verify", "migrate", "export", "import", "grep"} {
-		if line := commandHelp(cmd); !strings.HasPrefix(line, cmd) {
-			t.Fatalf("%s: unexpected help line %q", cmd, line)
+	for _, cmd := range []string{"show", "verify", "migrate", "export", "import", "grep", "status"} {
+		lines := commandHelp(cmd)
+		if len(lines) != 1 || !strings.HasPrefix(lines[0], cmd) {
+			t.Fatalf("%s: unexpected help lines %q", cmd, lines)
 		}
 	}
-	if commandHelp("remove") != commandHelp("rm") || commandHelp("rm") == "" {
+	if len(commandHelp("setup")) != 2 {
+		t.Fatalf("setup should list keyfile and tpm: %q", commandHelp("setup"))
+	}
+	if !reflect.DeepEqual(commandHelp("remove"), commandHelp("rm")) || len(commandHelp("rm")) != 1 {
 		t.Fatal("alias remove does not resolve to rm")
 	}
-	if commandHelp("nonexistent") != "" {
-		t.Fatal("unknown command returned a help line")
+	if len(commandHelp("nonexistent")) != 0 {
+		t.Fatal("unknown command returned help lines")
 	}
-	// "ls" must not match the "ls [filter]" prefix of another command
-	if got := commandHelp("l"); got != "" {
+	// Partial names must not match
+	if got := commandHelp("l"); len(got) != 0 {
 		t.Fatalf("partial name matched: %q", got)
 	}
 }
