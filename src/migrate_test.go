@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"os"
 	"testing"
 )
 
@@ -77,5 +78,47 @@ func TestParseMigrateArgs(t *testing.T) {
 		if err == nil && opts.skipBackup != c.skip {
 			t.Fatalf("%v: skipBackup=%v, want %v", c.args, opts.skipBackup, c.skip)
 		}
+	}
+}
+
+// answerPrompts feeds canned input to confirm for the duration of a test.
+func answerPrompts(t *testing.T, input string) {
+	t.Helper()
+	f, err := os.CreateTemp(t.TempDir(), "stdin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.WriteString(input); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.Seek(0, 0); err != nil {
+		t.Fatal(err)
+	}
+	previous := os.Stdin
+	os.Stdin = f
+	t.Cleanup(func() { os.Stdin = previous; f.Close() })
+}
+
+func TestEnsureTargetKeyCreatesMissingKeyfile(t *testing.T) {
+	isolateKeyfile(t)
+	path, _ := keyfilePath()
+	answerPrompts(t, "y\n")
+	if err := ensureTargetKey(modeKeyfile); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(path); err != nil {
+		t.Fatalf("keyfile was not created: %v", err)
+	}
+}
+
+func TestEnsureTargetKeyDeclined(t *testing.T) {
+	isolateKeyfile(t)
+	path, _ := keyfilePath()
+	answerPrompts(t, "n\n")
+	if err := ensureTargetKey(modeKeyfile); err == nil {
+		t.Fatal("declining must abort")
+	}
+	if _, err := os.Stat(path); err == nil {
+		t.Fatal("keyfile was created despite the refusal")
 	}
 }

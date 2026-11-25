@@ -35,7 +35,7 @@ winpass <command> [args]
 | `import [-f] <file>` | Import entries from an export file. Existing entries are skipped unless `-f` is given |
 | `verify <file> [<name>] [-c[line]]` | Check an export file without importing it: asks for the passphrase, authenticates the file and compares it with the store without printing any value. With a name, prints that entry (or copies it with `-c`), which also works as a recovery path. Exits with 1 if the backup does not fully cover the current store |
 | `status` | Show the active key mode, whether the keyfile and the TPM key exist, and how many entries use each mode. It reads headers only and never decrypts |
-| `migrate [--to default\|keyfile\|tpm] [--skip-backup]` | Re-encrypt every entry with a key mode (default: the active one). Asks you to confirm a recent backup unless `--skip-backup`. Safe to re-run |
+| `migrate [--to default\|keyfile\|tpm] [--skip-backup]` | Re-encrypt every entry with a key mode (default: the active one). Asks you to confirm a recent backup unless `--skip-backup`. If the target keyfile or TPM key does not exist, it offers to create it first, with the same warnings as `setup`. Safe to re-run |
 | `setup keyfile [path]` | Create a keyfile and use it as the encryption key. `--remove [--force]` deletes it, see [Key modes](#key-modes) |
 | `setup tpm` | Create a TPM-backed key. `--remove [--force]` deletes it |
 | `completion powershell` | Print the PowerShell tab-completion script |

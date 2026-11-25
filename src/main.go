@@ -31,7 +31,7 @@ var commandDocs = []commandDoc{
 	{"import [-f] <file>", "Import entries from an export file; -f (--force) overwrites existing ones"},
 	{"verify <file> [<name> [-c[N]]]", "Check an export against the store; with a name, print that entry or copy it with -c (--clip)"},
 	{"status", "Show the active key mode and how entries are stored"},
-	{"migrate [--to <mode>] [--skip-backup]", "Re-encrypt all entries; mode is default, keyfile or tpm; --skip-backup skips the backup prompt"},
+	{"migrate [--to <mode>] [--skip-backup]", "Re-encrypt all entries; mode is default, keyfile or tpm (a missing keyfile or TPM key is created after asking); --skip-backup skips the backup prompt"},
 	{"setup keyfile [path]", "Create a keyfile and use it as the encryption key"},
 	{"setup keyfile --remove [--force] [path]", "Delete the keyfile; refuses while entries use it unless --force"},
 	{"setup tpm", "Create a TPM-backed key"},

@@ -90,6 +90,39 @@ func migrateBlob(name string, blob []byte, target byte) (newBlob []byte, changed
 	return newBlob, !bytes.Equal(blob, newBlob), nil
 }
 
+// ensureTargetKey makes sure the key of the target mode is usable. A missing
+// keyfile or TPM key is created after the same confirmation as 'winpass setup',
+// so the backup advice is shown before any entry depends on it.
+func ensureTargetKey(target byte) error {
+	switch target {
+	case modeKeyfile:
+		path, _ := keyfilePath()
+		if path != "" {
+			if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+				fmt.Printf("No keyfile at %s. Entries encrypted with it are lost if the file is lost.\n", path)
+				if !confirm("Create it?") {
+					return errors.New("aborted")
+				}
+				if err := createKeyfileAt(path); err != nil {
+					return err
+				}
+			}
+		}
+	case modeTPM:
+		exists, err := tpmKeyExists()
+		if err != nil {
+			return err
+		}
+		if !exists {
+			if err := createTPMKeyInteractive(); err != nil {
+				return err
+			}
+		}
+	}
+	_, _, err := keyForMode(target)
+	return err
+}
+
 // cmdMigrate re-encrypts every entry with the target mode. Each CredWriteW
 // replaces one entry atomically, so an interrupted run can simply be repeated.
 func cmdMigrate(args []string) error {
@@ -97,10 +130,6 @@ func cmdMigrate(args []string) error {
 	if err != nil {
 		return err
 	}
-	if _, _, err := keyForMode(opts.target); err != nil {
-		return err
-	}
-
 	names, err := credEnumerate("")
 	if err != nil {
 		return err
@@ -113,6 +142,10 @@ func cmdMigrate(args []string) error {
 
 	if !opts.skipBackup && !confirm("Migration rewrites every entry. Did you make a recent backup with 'winpass export'?") {
 		return errors.New("aborted: make a backup first, or pass --skip-backup")
+	}
+
+	if err := ensureTargetKey(opts.target); err != nil {
+		return err
 	}
 
 	// The legacy warning points at this command, so it is noise here
