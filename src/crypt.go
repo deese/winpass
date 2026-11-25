@@ -188,6 +188,11 @@ func encryptEntry(name, plaintext string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	return encryptEntryWithMode(mode, name, plaintext)
+}
+
+// encryptEntryWithMode seals plaintext with an explicit mode.
+func encryptEntryWithMode(mode byte, name, plaintext string) ([]byte, error) {
 	key, id, err := keyForMode(mode)
 	if err != nil {
 		return nil, err

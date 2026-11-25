@@ -23,6 +23,7 @@ Commands:
   grep [-i] <regex>       Search inside decrypted entries
   export <file>           Export all entries to an encrypted file
   import [-f] <file>      Import entries from an encrypted file (-f overwrites)
+  migrate [--to <mode>]   Re-encrypt all entries with a key mode (--skip-backup skips the prompt)
   init                    No-op, kept for pass compatibility
   completion powershell   Print the PowerShell tab-completion script
   help                    Show this help
@@ -63,6 +64,8 @@ func main() {
 		err = cmdExport(args)
 	case "import":
 		err = cmdImport(args)
+	case "migrate":
+		err = cmdMigrate(args)
 	case "edit":
 		err = cmdEdit(args)
 	case "grep":
