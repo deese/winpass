@@ -28,7 +28,7 @@ Commands:
   setup keyfile [path]    Create a keyfile used as encryption key (--remove deletes it)
   setup tpm               Create a TPM-backed key (--remove deletes it)
   verify <file> [<name>]  Check an export against the store; with a name, show or copy (-c) that entry
-  migrate [--to <mode>]   Re-encrypt all entries with a key mode (--skip-backup skips the prompt)
+  migrate [--to <mode>]   Re-encrypt all entries; mode is default, keyfile or tpm (--skip-backup skips the backup prompt)
   init                    No-op, kept for pass compatibility
   completion powershell   Print the PowerShell tab-completion script
   help                    Show this help

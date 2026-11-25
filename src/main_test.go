@@ -26,6 +26,19 @@ func TestWantsHelp(t *testing.T) {
 	}
 }
 
+// The help must list every mode that migrate --to accepts.
+func TestMigrateHelpListsAllModes(t *testing.T) {
+	lines := commandHelp("migrate")
+	if len(lines) != 1 {
+		t.Fatalf("migrate help lines: %q", lines)
+	}
+	for name := range modeNames {
+		if !strings.Contains(lines[0], name) {
+			t.Fatalf("migrate help does not mention mode %q: %s", name, lines[0])
+		}
+	}
+}
+
 func TestCommandHelp(t *testing.T) {
 	for _, cmd := range []string{"show", "verify", "migrate", "export", "import", "grep", "status"} {
 		lines := commandHelp(cmd)
