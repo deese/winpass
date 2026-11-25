@@ -43,9 +43,10 @@ func cmdShow(args []string) error {
 	return nil
 }
 
-// entryExists reports whether an entry is stored under name.
+// entryExists reports whether an entry is stored under name. It does not
+// decrypt, so entries whose key is unavailable can still be replaced or removed.
 func entryExists(name string) (bool, error) {
-	_, err := credRead(name)
+	_, err := credReadRaw(name)
 	if err == nil {
 		return true, nil
 	}
