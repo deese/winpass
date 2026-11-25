@@ -55,6 +55,7 @@ func TestMigrateBlobRejectsUnsupportedTarget(t *testing.T) {
 }
 
 func TestParseMigrateArgs(t *testing.T) {
+	isolateKeyfile(t)
 	cases := []struct {
 		args    []string
 		wantErr bool
@@ -63,6 +64,7 @@ func TestParseMigrateArgs(t *testing.T) {
 		{nil, false, false},
 		{[]string{"--to", "default"}, false, false},
 		{[]string{"--to=default", "--skip-backup"}, false, true},
+		{[]string{"--to", "keyfile"}, false, false},
 		{[]string{"--to"}, true, false},
 		{[]string{"--to", "nope"}, true, false},
 		{[]string{"extra"}, true, false},

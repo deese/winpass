@@ -111,7 +111,8 @@ func readMachineGUID() (string, error) {
 
 // activeMode is the mode used for new writes.
 func activeMode() (byte, error) {
-	return modeDefault, nil
+	path, explicit := keyfilePath()
+	return chooseMode(path, explicit)
 }
 
 // keyForMode returns the key and key ID of a mode.
@@ -120,6 +121,8 @@ func keyForMode(mode byte) ([]byte, keyID, error) {
 	case modeDefault:
 		key, err := defaultKey()
 		return key, keyID{}, err
+	case modeKeyfile:
+		return keyfileKey()
 	default:
 		return nil, keyID{}, fmt.Errorf("%w: %d", errUnsupportedMode, mode)
 	}

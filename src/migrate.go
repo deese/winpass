@@ -13,9 +13,10 @@ import (
 // are implemented.
 var modeNames = map[string]byte{
 	"default": modeDefault,
+	"keyfile": modeKeyfile,
 }
 
-const migrateUsage = "usage: winpass migrate [--to default] [--skip-backup]"
+const migrateUsage = "usage: winpass migrate [--to default|keyfile] [--skip-backup]"
 
 type migrateOptions struct {
 	target     byte

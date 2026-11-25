@@ -126,6 +126,7 @@ func TestDecryptEntryUnsupportedMode(t *testing.T) {
 }
 
 func TestDefaultModeRoundTrip(t *testing.T) {
+	isolateKeyfile(t)
 	blob, err := encryptEntry("web/site", "pw")
 	if err != nil {
 		t.Fatal(err)
