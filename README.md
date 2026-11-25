@@ -165,7 +165,7 @@ Take an export before `migrate` and before removing a key.
 
 ## Building from source
 
-Requires Go 1.21+. No external modules.
+Requires Go 1.24+. No external modules.
 
 ```
 git clone <repo>
