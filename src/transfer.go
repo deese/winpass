@@ -30,6 +30,11 @@ func cmdExport(args []string) error {
 	}
 	path := args[0]
 
+	// Fail before prompting for a passphrase; O_EXCL below still guards the race
+	if err := checkExportTarget(path); err != nil {
+		return err
+	}
+
 	names, err := credEnumerate("")
 	if err != nil {
 		return err
@@ -73,6 +78,18 @@ func cmdExport(args []string) error {
 		return err
 	}
 	fmt.Printf("Exported %d entries to %s.\n", len(entries), path)
+	return nil
+}
+
+// checkExportTarget rejects a path that already exists. Exports never overwrite.
+func checkExportTarget(path string) error {
+	_, err := os.Stat(path)
+	if err == nil {
+		return fmt.Errorf("%s already exists, refusing to overwrite", path)
+	}
+	if !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
 	return nil
 }
 
