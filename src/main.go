@@ -19,6 +19,7 @@ type commandDoc struct {
 var commandDocs = []commandDoc{
 	{"show [-c[N]] <name>", "Show a password; -c (--clip) copies line N (default 1) to the clipboard instead"},
 	{"insert [-e | -m] [-f] <name>", "Insert a password; -e (--echo) echoes input, -m (--multiline) reads several lines, -f (--force) overwrites"},
+	{"run -e VAR=<name>... -- <command> [args]", "Run a command with the first line of each entry in an environment variable; -e (--env) binds one, repeatable"},
 	{"edit <name>", "Edit an entry with $EDITOR (default: notepad)"},
 	{"generate [-n] [-c] [-i | -f] <name> [n]", "Generate a password of length n (default 25); -n (--no-symbols), -c (--clip), -i (--in-place) replaces only the first line, -f (--force) overwrites"},
 	{"rm [-r] [-f] <name>", "Remove an entry; -r (--recursive) removes a directory, -f (--force) skips the prompt"},
@@ -151,6 +152,8 @@ func main() {
 		err = cmdVerify(args)
 	case "migrate":
 		err = cmdMigrate(args)
+	case "run":
+		err = cmdRun(args)
 	case "edit":
 		err = cmdEdit(args)
 	case "grep":

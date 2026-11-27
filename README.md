@@ -24,6 +24,7 @@ winpass <command> [args]
 | `insert [-e \| -m] [-f] <name>` | Insert password interactively. `-e` echoes input, `-m` multiline, `-f` skips the overwrite prompt |
 | `generate [-c] [-n] [-i \| -f] <name> [length]` | Generate random password (default length: 25). `-c` copies, `-n` no symbols, `-i` replaces only the first line of an existing entry, `-f` skips the overwrite prompt |
 | `rm [-r] [-f] <name>` | Delete entry. `-r` deletes a directory recursively, `-f` skips the confirmation |
+| `run -e VAR=<name>... -- <command> [args]` | Run a command with the first line of each entry in an environment variable (`-e`/`--env`, repeatable). The `--` is mandatory. The secret never reaches the command line, the clipboard or the disk, but any process of your user that can read the child's environment can see it, and grandchildren inherit it. The exit code of the command is propagated. If a host such as Claude Desktop starts `winpass` with a trimmed `PATH`, the persistent machine and user `Path` from the registry are appended (the inherited entries keep precedence) so the command and the tools it spawns are found; a note is printed to stderr when that was needed |
 | `edit <name>` | Edit an entry with `$EDITOR` (default: `notepad.exe`). See the note below |
 | `mv [-f] <old> <new>` | Rename or move an entry or a whole directory. A trailing `/` or an existing directory as destination means "into it". Prompts before overwriting unless `-f` |
 | `cp [-f] <old> <new>` | Same as `mv`, but copies |

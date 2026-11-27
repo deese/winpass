@@ -37,6 +37,7 @@ func TestHelpListsAllOptions(t *testing.T) {
 		"mv":       {"-f", "--force"},
 		"cp":       {"-f", "--force"},
 		"grep":     {"-i", "--ignore-case"},
+		"run":      {"-e", "--env"},
 		"import":   {"-f", "--force"},
 		"verify":   {"-c", "--clip"},
 		"migrate":  {"--to", "--skip-backup"},
