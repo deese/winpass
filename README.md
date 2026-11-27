@@ -64,6 +64,20 @@ The `-c` flag copies only the first line of the stored value (the password), or 
 
 Every command also accepts `--help` (or `-h`) and prints its usage line.
 
+### Running commands with secrets
+
+`winpass run` keeps a secret out of config files, shell history and the command line. For example, an MCP server in Claude Desktop's `claude_desktop_config.json` can read its token from winpass instead of storing it in clear text:
+
+```json
+"Home Assistant": {
+  "command": "C:\\Users\\you\\bin\\winpass.exe",
+  "args": ["run", "-e", "HOMEASSISTANT_TOKEN=mcp/homeassistant", "--", "uvx", "ha-mcp@latest"],
+  "env": { "HOMEASSISTANT_URL": "http://homeassistant.local:8123" }
+}
+```
+
+Only the first line of each entry is used. Anything after `--` is the command, so its own options are never parsed by winpass.
+
 ### PowerShell tab completion
 
 Paste the output of `winpass completion powershell` into your `$PROFILE`. It works in Constrained Language Mode and completes subcommands and entry names. Entry names are read from the credential store; values are never decrypted for completion.
@@ -118,6 +132,8 @@ New entries use the first available mode in this order: keyfile, tpm, default. R
 The goal is to push back simple attacks, not to replace a vault such as 1Password. The modes help against tools that dump or bulk-read the Credential Manager without knowing winpass, and against blobs exfiltrated without the machine, the keyfile or the TPM.
 
 They do not protect against an attacker who runs code as your user and knows winpass: that process can run `winpass` itself, read the keyfile, or ask the TPM to sign. The repository is public, so the `default` pepper is not a secret. The `default` key rests on the `MachineGuid` not travelling with the blob, and the `MachineGuid` is readable by any local process.
+
+`winpass run` only protects the secret at rest. While the child process lives, the value sits in its environment block: any process of your user that can read it sees the secret, and grandchildren inherit it. It also stays in the memory of `winpass` itself until the command exits. If you let an automated agent run shell commands, keep in mind that `winpass <name>` (which behaves like `show`) cannot be restricted by a command pattern, and that a `run` with a command of the agent's choosing can print the secret.
 
 ### Keyfile
 
